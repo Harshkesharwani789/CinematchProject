@@ -79,3 +79,43 @@ export const searchMovies = async (query, page = 1) => {
     return [];
   }
 };
+
+export const getPersonDetails = async (id) => {
+  try {
+    const response = await api.get(`/person/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching person details:', error);
+    return null;
+  }
+};
+
+export const getPersonMovieCredits = async (id) => {
+  try {
+    const response = await api.get(`/person/${id}/movie_credits`);
+    return response.data.cast;
+  } catch (error) {
+    console.error('Error fetching person movie credits:', error);
+    return [];
+  }
+};
+
+export const getMovieReviews = async (id) => {
+  try {
+    const response = await api.get(`/movie/${id}/reviews`);
+    return response.data.results;
+  } catch (error) {
+    console.error('Error fetching movie reviews:', error);
+    return [];
+  }
+};
+
+export const getRecommendations = async (id) => {
+  try {
+    const response = await api.get(`/movie/${id}/recommendations`);
+    return response.data.results;
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    return [];
+  }
+};
