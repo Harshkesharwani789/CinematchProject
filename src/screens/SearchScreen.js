@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { searchMovies } from '../api/tmdb';
 import MovieCard from '../components/MovieCard';
@@ -14,46 +14,68 @@ const SearchScreen = ({ navigation }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const handleSearch = async (reset = true, specificPage = null) => {
-    if (!query.trim()) return;
-    
-    if (reset) {
-      setLoading(true);
-      setResults([]);
-      setPage(1);
-      setHasMore(true);
-    }
+  // Debounce function
+  const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
 
-    const currentPage = specificPage || (reset ? 1 : page + 1);
-    
-    if (!reset && loading) return;
-    if (!reset) setLoading(true);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
 
-    const data = await searchMovies(query, currentPage);
-    
-    if (data.length === 0) {
-      setHasMore(false);
-    }
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
 
-    const filtered = data.filter(movie => {
-      const ratingMatch = movie.vote_average >= minRating;
-      const yearMatch = year ? (movie.release_date && movie.release_date.startsWith(year)) : true;
-      return ratingMatch && yearMatch;
-    });
-
-    setResults(prev => reset ? filtered : [...prev, ...filtered]);
-    setLoading(false);
-    
-    if (reset) {
-      setPage(1);
-    } else {
-      setPage(currentPage);
-    }
+    return debouncedValue;
   };
 
+  const debouncedQuery = useDebounce(query, 500);
+  const debouncedYear = useDebounce(year, 500);
+
+  const fetchMovies = useCallback(async (searchQuery, searchYear, searchRating, pageNum, reset = false) => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    if (reset) setLoading(true);
+
+    try {
+      const data = await searchMovies(searchQuery, pageNum);
+      
+      if (data.length === 0) {
+        setHasMore(false);
+      }
+
+      const filtered = data.filter(movie => {
+        const ratingMatch = movie.vote_average >= searchRating;
+        const yearMatch = searchYear ? (movie.release_date && movie.release_date.startsWith(searchYear)) : true;
+        return ratingMatch && yearMatch;
+      });
+
+      setResults(prev => reset ? filtered : [...prev, ...filtered]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Effect for Live Search
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    fetchMovies(debouncedQuery, debouncedYear, minRating, 1, true);
+  }, [debouncedQuery, debouncedYear, minRating, fetchMovies]);
+
   const loadMore = () => {
-    if (!loading && hasMore) {
-      handleSearch(false, page + 1);
+    if (!loading && hasMore && query.trim()) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchMovies(debouncedQuery, debouncedYear, minRating, nextPage, false);
     }
   };
 
@@ -70,7 +92,6 @@ const SearchScreen = ({ navigation }) => {
           placeholderTextColor={theme.colors.subText}
           value={query}
           onChangeText={setQuery}
-          onSubmitEditing={() => handleSearch(true)}
           returnKeyType="search"
         />
       </View>
@@ -105,10 +126,6 @@ const SearchScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <TouchableOpacity style={[styles.searchButton, { backgroundColor: theme.colors.card }]} onPress={() => handleSearch(true)}>
-        <Text style={[styles.searchButtonText, { color: theme.colors.text }]}>Apply Filters & Search</Text>
-      </TouchableOpacity>
-
       {loading && page === 1 ? (
         <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 20 }} />
       ) : (
@@ -131,7 +148,7 @@ const SearchScreen = ({ navigation }) => {
           onEndReachedThreshold={0.5}
           ListFooterComponent={loading && page > 1 ? <ActivityIndicator color={theme.colors.primary} /> : null}
           ListEmptyComponent={
-            !loading && query ? (
+            !loading && debouncedQuery.trim() ? (
               <Text style={[styles.emptyText, { color: theme.colors.subText }]}>No movies found matching your criteria.</Text>
             ) : null
           }
@@ -194,16 +211,6 @@ const styles = StyleSheet.create({
   },
   ratingBtnText: {
     fontSize: 12,
-  },
-  searchButton: {
-    marginHorizontal: 20,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  searchButtonText: {
-    fontWeight: 'bold',
   },
   listContent: {
     paddingHorizontal: 12,
