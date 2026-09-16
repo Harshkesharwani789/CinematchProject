@@ -12,10 +12,14 @@ const EditProfileScreen = ({ navigation }) => {
       Alert.alert('Error', 'Name cannot be empty');
       return;
     }
-    await updateProfile(name);
-    Alert.alert('Success', 'Profile updated successfully', [
-      { text: 'OK', onPress: () => navigation.goBack() }
-    ]);
+    try {
+      await updateProfile(name);
+      Alert.alert('Success', 'Profile updated successfully', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      Alert.alert('Unable to update profile', error.message || 'Please try again.');
+    }
   };
 
   return (

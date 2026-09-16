@@ -6,8 +6,16 @@ import { TMDB_IMAGE_BASE_URL } from '../utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
 const WatchlistScreen = ({ navigation }) => {
-  const { watchlist, removeFromWatchlist } = useContext(WatchlistContext);
+  const { watchlist, isLoading, removeFromWatchlist } = useContext(WatchlistContext);
   const { theme } = useContext(ThemeContext);
+
+  const handleRemove = async (movieId) => {
+    try {
+      await removeFromWatchlist(movieId);
+    } catch (error) {
+      console.error('Unable to remove watchlist item', error.message);
+    }
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity 
@@ -25,7 +33,7 @@ const WatchlistScreen = ({ navigation }) => {
       </View>
       <TouchableOpacity 
         style={styles.removeBtn}
-        onPress={() => removeFromWatchlist(item.id)}
+        onPress={() => handleRemove(item.id)}
       >
         <Ionicons name="trash-outline" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
@@ -38,7 +46,12 @@ const WatchlistScreen = ({ navigation }) => {
         <Text style={[styles.title, { color: theme.colors.text }]}>My Watchlist</Text>
       </View>
 
-      {watchlist.length === 0 ? (
+      {isLoading ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="film-outline" size={40} color={theme.colors.primary} />
+          <Text style={[styles.emptyText, { color: theme.colors.subText }]}>Loading your saved movies…</Text>
+        </View>
+      ) : watchlist.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="bookmark-outline" size={64} color={theme.colors.subText} />
           <Text style={[styles.emptyText, { color: theme.colors.subText }]}>Your watchlist is empty</Text>

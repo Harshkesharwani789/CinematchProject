@@ -23,13 +23,13 @@ const ChangePasswordScreen = ({ navigation }) => {
       return;
     }
 
-    const success = await changePassword(oldPassword, newPassword);
-    if (success) {
+    try {
+      await changePassword(oldPassword, newPassword);
       Alert.alert('Success', 'Password changed successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
-    } else {
-      Alert.alert('Error', 'Incorrect old password');
+    } catch (error) {
+      Alert.alert('Unable to change password', error.message || 'Please try again.');
     }
   };
 

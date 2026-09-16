@@ -25,7 +25,7 @@ const LoginScreen = ({ navigation }) => {
     try {
       await login(email, password);
     } catch (e) {
-      Alert.alert('Error', 'Login failed');
+      Alert.alert('Unable to sign in', e.message || 'Please check your email and password, then try again.');
     } finally {
       setLoading(false);
     }

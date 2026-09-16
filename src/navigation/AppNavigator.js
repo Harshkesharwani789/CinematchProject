@@ -9,11 +9,12 @@ import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import PersonDetailsScreen from '../screens/PersonDetailsScreen';
+import SetupScreen from '../screens/SetupScreen';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const { user, isLoading } = useContext(AuthContext);
+  const { user, isLoading, setupError } = useContext(AuthContext);
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
 
   useEffect(() => {
@@ -28,6 +29,10 @@ const AppNavigator = () => {
 
   if (isLoading || isFirstLaunch === null) {
     return <SplashScreen />;
+  }
+
+  if (setupError) {
+    return <SetupScreen message={setupError} />;
   }
 
   return (

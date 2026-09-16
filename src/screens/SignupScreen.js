@@ -22,12 +22,20 @@ const SignupScreen = ({ navigation }) => {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
     
     setLoading(true);
     try {
-      await signup(name, email, password);
+      const result = await signup(name, email, password);
+      if (result.requiresEmailConfirmation) {
+        Alert.alert('Check your inbox', 'We sent a confirmation link to your email. Confirm it, then sign in.');
+        navigation.navigate('Login');
+      }
     } catch (e) {
-      Alert.alert('Error', 'Signup failed');
+      Alert.alert('Unable to create account', e.message || 'Please try again.');
     } finally {
       setLoading(false);
     }

@@ -65,11 +65,15 @@ const MovieDetailsScreen = ({ route, navigation }) => {
 
   const isSaved = isInWatchlist(movie.id);
 
-  const toggleWatchlist = () => {
-    if (isSaved) {
-      removeFromWatchlist(movie.id);
-    } else {
-      addToWatchlist(movie);
+  const toggleWatchlist = async () => {
+    try {
+      if (isSaved) {
+        await removeFromWatchlist(movie.id);
+      } else {
+        await addToWatchlist(movie);
+      }
+    } catch (error) {
+      Alert.alert('Could not update watchlist', error.message || 'Please try again.');
     }
   };
 
