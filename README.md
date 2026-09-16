@@ -1,93 +1,132 @@
 # CineMatch
 
-A polished React Native / Expo movie discovery app powered by TMDB. CineMatch now uses **Supabase Auth** for real email/password accounts and a cloud-synced watchlist protected with Row Level Security (RLS).
+> A full-stack, cross-platform movie discovery app that turns browsing into a personal, persistent watchlist experience.
 
-## Stack
+CineMatch is a React Native application built with Expo. Users can discover movies, search the TMDB catalogue, watch trailers, explore cast details, and save movies to a private cloud-backed watchlist. It is designed as a portfolio project that demonstrates mobile UI development, real authentication, secure data access, and deployment-ready engineering.
 
-- React Native + Expo
-- React Navigation
-- TMDB API for movie data
-- Supabase Auth + Postgres for user accounts and saved movies
-- Vercel for a free public web demo
+**Project status:** Actively developed · Authentication and cloud persistence are live · Web deployment is configured but **not deployed yet**.
 
-## Run it locally
+## Why this project stands out
 
-1. Install Node.js 20 LTS and the Expo Go app on your phone.
-2. Install dependencies:
+- **Real user accounts:** Email/password sign-up, sign-in, persistent sessions, profile updates, and password changes via Supabase Auth.
+- **Secure cloud data:** Every user gets an independent watchlist stored in Postgres. Row Level Security ensures users can only read or change their own records.
+- **Polished mobile experience:** Onboarding, animated startup loader, dark mode, responsive navigation, movie details, trailers, cast, reviews, and a dedicated profile area.
+- **Production-minded configuration:** Secrets stay out of source control, environment variables are documented, and the project can export a static web build successfully.
 
-   ```bash
-   npm install
-   ```
+## Features
 
-3. Copy `.env.example` to a new `.env` file and add the three values described below. `.env` is ignored by Git.
-4. Start the app:
+| Area | What it includes |
+| --- | --- |
+| Discovery | Popular movie browsing, search, movie details, genres, ratings, cast, and reviews |
+| Video | In-app YouTube trailer playback with a graceful fallback when no trailer is available |
+| Personalisation | Per-account cloud watchlist, profile editing, dark mode, and onboarding state |
+| Authentication | Secure sign-up/sign-in, persisted sessions, sign-out, email confirmation support, and password updates |
+| User experience | Animated CineMatch loading screen, loading states, error handling, and adaptive navigation |
 
-   ```bash
-   npx expo start --clear
-   ```
+## Architecture
 
-   Scan the QR code in Expo Go, or press `w` for the browser version.
-
-## One-time cloud setup (free)
-
-### 1. Create the Supabase project
-
-1. Create a free project at [Supabase](https://supabase.com/dashboard).
-2. Open the project’s **Connect** dialog (or **Project Settings → API**) and copy the **Project URL** and **publishable / anon key**.
-3. Put them in `.env`:
-
-   ```env
-   EXPO_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-publishable-or-anon-key
-   EXPO_PUBLIC_TMDB_API_KEY=your-tmdb-api-key
-   ```
-
-   The Supabase publishable/anon key is designed for a client app; the table’s RLS policies protect user data. Never use a `service_role` key in this project.
-
-4. In Supabase, open **SQL Editor → New query**, paste the complete contents of [`supabase/schema.sql`](./supabase/schema.sql), and click **Run**. This creates `watchlist_items` and access rules so every account can only access its own list.
-5. Go to **Authentication → Providers → Email**. Email/password is enabled by default. For quick testing, you may turn **Confirm email** off. For a portfolio deployment, keep it on.
-
-Supabase’s default email service is appropriate for light testing; use a custom SMTP provider before a high-volume public launch.
-
-### 2. Get a TMDB key
-
-1. Create an account at [TMDB](https://www.themoviedb.org/settings/api).
-2. Request an API key and set `EXPO_PUBLIC_TMDB_API_KEY` in `.env`.
-3. Restrict the key in the TMDB dashboard if you publish the web app.
-
-## Deploy a free web demo with Vercel
-
-This is the strongest résumé-friendly option: one shareable URL that opens in any browser.
-
-1. Create a GitHub repository and push this project:
-
-   ```bash
-   git add .
-   git commit -m "Add Supabase auth and cloud watchlists"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/cinematch.git
-   git push -u origin main
-   ```
-
-2. Create a Vercel account, select **Add New → Project**, import the GitHub repository, and use the project root as the root directory.
-3. Vercel reads [`vercel.json`](./vercel.json). Confirm the build command is `npm run build:web` and the output directory is `dist`.
-4. In **Project Settings → Environment Variables**, add all three `EXPO_PUBLIC_*` values from your local `.env` for **Production**, **Preview**, and **Development**. Do not commit `.env`.
-5. Click **Deploy**. Every subsequent push to `main` deploys a new version automatically.
-6. Copy the resulting `https://your-project.vercel.app` URL. In Supabase, set it as **Authentication → URL Configuration → Site URL** and add it to **Redirect URLs**. This lets confirmation emails return users to the live app.
-
-To test the production bundle locally before deploying:
-
-```bash
-npm run build:web
-npx serve dist
+```text
+Expo / React Native client
+        │
+        ├── TMDB API ───────────────► movie catalogue, images, trailers, cast, reviews
+        │
+        └── Supabase
+              ├── Auth ─────────────► email/password accounts and sessions
+              └── Postgres + RLS ───► private watchlist_items per signed-in user
 ```
 
-Expo documents that `npx expo export -p web` produces the static files in `dist`; Vercel serves that directory after its build command. See the [Expo web publishing guide](https://docs.expo.dev/guides/publishing-websites/) and [Vercel build configuration](https://vercel.com/docs/builds/configure-a-build).
+The app uses the Supabase publishable key only in the client. It never contains a privileged `service_role` key. The database access rules in [`supabase/schema.sql`](./supabase/schema.sql) enforce data ownership on the server, rather than relying only on frontend checks.
 
-## Share a native build
+## Tech stack
 
-During development, use Expo Go and `npx expo start`. To create installable Android/iOS builds, create an Expo account and follow the [EAS Build guide](https://docs.expo.dev/build/introduction/). Check the current free-tier quota before publishing; Apple App Store and Google Play developer accounts are paid separately.
+- **Mobile / web:** React Native, Expo SDK 54, React Navigation
+- **Backend as a service:** Supabase Auth and Postgres
+- **Data security:** Supabase Row Level Security (RLS)
+- **Movie data:** TMDB API
+- **Media:** YouTube iframe player
+- **Web deployment readiness:** Expo static export + Vercel configuration
 
-## Resume-ready project description
+## Run locally
 
-> Built CineMatch, a cross-platform React Native movie discovery app with TMDB search, trailers, dark mode, and personalized watchlists. Implemented secure email authentication and per-user cloud data persistence using Supabase Auth, Postgres, and Row Level Security; deployed a production web demo with Expo and Vercel.
+### Prerequisites
+
+- Node.js 20 LTS or later
+- Expo Go on Android/iOS (optional, for physical-device testing)
+- A free Supabase project and TMDB API key
+
+### Installation
+
+```bash
+git clone https://github.com/YOUR_USERNAME/cinematch.git
+cd cinematch
+npm install
+cp .env.example .env
+```
+
+Add your values to `.env`:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-publishable-key
+EXPO_PUBLIC_TMDB_API_KEY=your-tmdb-api-key
+```
+
+> `.env` is ignored by Git. Never put a Supabase secret/service-role key in a React Native or web client.
+
+### Configure the database once
+
+1. Create a free project in [Supabase](https://supabase.com/dashboard).
+2. In **SQL Editor**, run the complete contents of [`supabase/schema.sql`](./supabase/schema.sql).
+3. In **Authentication → Providers → Email**, keep email/password enabled. Email confirmation can be disabled temporarily during local testing.
+
+### Start the app
+
+```bash
+npx expo start --clear
+```
+
+Scan the QR code with Expo Go, press `a` for Android, `i` for iOS, or `w` for the web version.
+
+## Quality checks
+
+```bash
+# Create the production-ready static web bundle
+npm run build:web
+```
+
+The build exports to `dist/`, which is intentionally excluded from version control. The current web build completes successfully.
+
+## Deployment plan
+
+Deployment has **not** happened yet. The repository is prepared for a free Vercel deployment using [`vercel.json`](./vercel.json):
+
+1. Push this repository to GitHub.
+2. Import it into Vercel.
+3. Add the same `EXPO_PUBLIC_*` variables in Vercel’s environment settings.
+4. Vercel runs `npm run build:web` and publishes `dist/`.
+5. Add the final Vercel URL to Supabase Auth’s Site URL and Redirect URLs.
+
+For an installable mobile build, Expo EAS Build is the next step after testing in Expo Go.
+
+## What I learned / engineering decisions
+
+- Chose Supabase instead of a custom Node/MongoDB backend to deliver authentication, database persistence, and authorization with less operational overhead.
+- Used RLS policies as the source of truth for authorization, so a malicious client cannot access another user’s saved movies by changing a frontend request.
+- Stored full movie snapshots as JSON alongside TMDB IDs, allowing the watchlist to render quickly without re-fetching every movie.
+- Kept API configuration in environment variables and added a clear setup screen for missing cloud configuration.
+- Added a web build pipeline early, catching a browser-only trailer dependency before deployment.
+
+## Resume-ready description
+
+> Built **CineMatch**, a cross-platform React Native movie discovery app using Expo and the TMDB API. Implemented secure email authentication, persistent sessions, and private cloud watchlists with Supabase Auth, Postgres, and Row Level Security. Added trailer playback, search, dark mode, profile management, and a deployment-ready static web build pipeline.
+
+## Future improvements
+
+- Deploy the Expo web build to Vercel and add a live demo link.
+- Add password-reset deep linking and social sign-in.
+- Add watchlist categories, sorting, and offline caching.
+- Add automated tests and CI checks.
+
+## Attribution
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.
