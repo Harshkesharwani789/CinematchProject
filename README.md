@@ -116,9 +116,6 @@ For an installable mobile build, Expo EAS Build is the next step after testing i
 - Kept API configuration in environment variables and added a clear setup screen for missing cloud configuration.
 - Added a web build pipeline early, catching a browser-only trailer dependency before deployment.
 
-## Resume-ready description
-
-> Built **CineMatch**, a cross-platform React Native movie discovery app using Expo and the TMDB API. Implemented secure email authentication, persistent sessions, and private cloud watchlists with Supabase Auth, Postgres, and Row Level Security. Added trailer playback, search, dark mode, profile management, and a deployment-ready static web build pipeline.
 
 ## Future improvements
 
